@@ -24,6 +24,7 @@ en los Estados Unidos durante el período 2015–2022?
 ## Objetivos
 **Principal:**
 Estimar el efecto del crecimiento de Netflix (medido por el número de suscriptores globales trimestrales) sobre los ingresos semanales de taquilla en los Estados Unidos durante el período 2015–2022, controlando por factores macroeconómicos, de oferta cinematográfica y estacionalidad.
+
 **Específicos:**
 1. Describir y comparar la evolución temporal de los ingresos de taquilla en 
    EE.UU. y el crecimiento de suscriptores de Netflix entre 2015 y 2022, 
