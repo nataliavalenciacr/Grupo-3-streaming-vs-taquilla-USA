@@ -1,0 +1,135 @@
+# Streaming VS Taquilla Estadounidense
+# Natalia Valencia & Juan Pablo Mora
+library(readxl)
+library(dplyr)
+
+base_final <- read_excel("C:/Users/natal/OneDrive/Personal/Universidad (1)/Noveno semestre/Analítica de datos/Caso Final/base streaming_taquilla.xlsx")
+
+cat("Observaciones:", nrow(base_final), "\n")
+print(names(base_final))
+# 01 - ESTADÍSTICAS DESCRIPTIVAS
+install.packages(c("stargazer", "openxlsx"))
+library(stargazer)
+library(openxlsx)
+variables_desc <- base_final %>%
+  select(
+    taquilla_semanal,
+    log_taquilla,
+    suscriptores_netflix,
+    ingresos_netflix,
+    delta_suscriptores,
+    num_estrenos,
+    desempleo_usa,
+    cpi_usa,
+    inflacion,
+    pib_usa,
+    netflix_x_covid
+  )
+
+stargazer(
+  as.data.frame(variables_desc),
+  type = "text",
+  title = "Estadísticas Descriptivas",
+  digits = 2,
+  summary.stat = c("n", "mean", "sd", "min", "median", "max")
+)
+
+tabla_desc <- data.frame(
+  Variable = c("taquilla_semanal", "log_taquilla", "suscriptores_netflix",
+               "ingresos_netflix", "delta_suscriptores", "num_estrenos",
+               "desempleo_usa", "cpi_usa", "inflacion", "pib_usa", "netflix_x_covid"),
+  N       = 410,
+  Media   = round(sapply(variables_desc, mean,   na.rm = TRUE), 2),
+  Std_Dev = round(sapply(variables_desc, sd,     na.rm = TRUE), 2),
+  Min     = round(sapply(variables_desc, min,    na.rm = TRUE), 2),
+  Mediana = round(sapply(variables_desc, median, na.rm = TRUE), 2),
+  Max     = round(sapply(variables_desc, max,    na.rm = TRUE), 2)
+)
+
+ruta <- "C:/Users/natal/OneDrive/Personal/Universidad (1)/Noveno semestre/Analítica de datos/Caso Final/estadisticas_descriptivas.xlsx"
+write.xlsx(tabla_desc, ruta, rowNames = FALSE)
+
+install.packages("corrplot")
+library(corrplot)
+
+# GRÁFICA O FIGURA 1.1 Matriz de correlaciones
+install.packages("reshape2")
+library(ggplot2)
+library(reshape2)
+cor_melted <- melt(matriz_cor)
+grafica_cor <- ggplot(cor_melted, aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile(color = "white") +
+  geom_text(aes(label = round(value, 2)), size = 3, color = "black") +
+  scale_fill_gradient2(
+    low     = "#8B0000",
+    mid     = "white",
+    high    = "#1A3C5E",
+    midpoint = 0,
+    limits  = c(-1, 1),
+    name    = "Correlación"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x  = element_text(angle = 45, hjust = 1, size = 9),
+    axis.text.y  = element_text(size = 9),
+    plot.title   = element_text(hjust = 0.5, face = "bold", size = 13)
+  ) +
+  labs(title = "Matriz de Correlaciones", x = "", y = "")
+
+ruta_img <- "C:/Users/natal/OneDrive/Personal/Universidad (1)/Noveno semestre/Analítica de datos/Caso Final/matriz_correlaciones.png"
+
+ggsave(ruta_img, plot = grafica_cor, width = 12, height = 10, dpi = 150)
+
+# TABLA 2: MEDIAS PRE vs. POST COVID
+tabla_covid <- base_final %>%
+  mutate(periodo = ifelse(dummy_covid == 0, 
+                          "Pre-COVID (2015 - feb 2020)", 
+                          "Post-COVID (mar 2020 - 2022)")) %>%
+  group_by(periodo) %>%
+  summarise(
+    Semanas              = n(),
+    Taquilla_Media       = round(mean(taquilla_semanal), 0),
+    Log_Taquilla_Media   = round(mean(log_taquilla), 2),
+    Suscriptores_Netflix = round(mean(suscriptores_netflix), 2),
+    Desempleo            = round(mean(desempleo_usa), 2),
+    PIB                  = round(mean(pib_usa), 2),
+    CPI                  = round(mean(cpi_usa), 2),
+    Num_Estrenos         = round(mean(num_estrenos), 1)
+  )
+
+print(tabla_covid)
+ruta <- "C:/Users/natal/OneDrive/Personal/Universidad (1)/Noveno semestre/Analítica de datos/Caso Final/tabla pre_post_covid.xlsx"
+write.xlsx(tabla_covid, ruta, rowNames = FALSE)
+
+# GRÁFICA 1.2: EVOLUCIÓN DE LA TAQUILLA SEMANAL
+library(ggplot2)
+library(scales)
+
+grafica_taquilla <- ggplot(base_final, aes(x = fecha, y = taquilla_semanal)) +
+  geom_line(color = "#8B0000", linewidth = 0.7, alpha = 0.8) +
+  geom_smooth(method = "loess", se = FALSE, color = "#1A3C5E", 
+              linewidth = 1.2, linetype = "dashed") +
+  geom_vline(xintercept = as.Date("2020-03-16"), 
+             color = "black", linewidth = 1, linetype = "dashed") +
+  annotate("text", x = as.Date("2020-05-01"), y = 450000000,
+           label = "Inicio COVID-19\n(mar 2020)", 
+           hjust = 0, size = 3.5, color = "black") +
+  scale_y_continuous(labels = label_dollar(scale = 1e-6, suffix = "M")) +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  labs(
+    title    = "Gráfica 1.2 Evolución de los ingresos semanales de taquilla en EE.UU. (2015–2022)",
+    subtitle = "Línea azul discontinua: tendencia suavizada (LOESS)",
+    x        = "",
+    y        = "Ingresos semanales (millones USD)",
+    caption  = "Fuente: Box Office Mojo"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title    = element_text(face = "bold", size = 11, hjust = 0),
+    plot.subtitle = element_text(size = 9, color = "gray50"),
+    axis.text     = element_text(size = 9),
+    plot.caption  = element_text(size = 8, color = "gray50")
+  )
+
+ruta_g1 <- "C:/Users/natal/OneDrive/Personal/Universidad (1)/Noveno semestre/Analítica de datos/Caso Final/grafica_taquilla_semanal.png"
+ggsave(ruta_g1, plot = grafica_taquilla, width = 12, height = 6, dpi = 150)
