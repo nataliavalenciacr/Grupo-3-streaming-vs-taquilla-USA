@@ -173,40 +173,49 @@ ggsave(ruta_g2, plot = grafica_netflix, width = 12, height = 6, dpi = 150)
 
 # GRÁFICA 1.4: DISTRIBUCIÓN DE INGRESOS DE TAQUILLA ANTES Y DESPUÉS
 #              DEL AJUSTE LOGARÍTMICO
+library(patchwork)
+base_final <- read_excel("C:/Users/natal/OneDrive/Personal/Universidad (1)/Noveno semestre/Analítica de datos/Caso Final/base streaming_taquilla USA.xlsx")
 
-
-
-datos_dist <- base_final %>%
-  select(taquilla_semanal, log_taquilla) %>%
-  tidyr::pivot_longer(
-    cols      = everything(),
-    names_to  = "tipo",
-    values_to = "valor"
-  ) %>%
-  mutate(tipo = recode(tipo,
-    "taquilla_semanal" = "Distribución original\n(taquilla semanal en USD)",
-    "log_taquilla"     = "Distribución logarítmica\n(log de taquilla semanal)"
-  ))
-
-grafica_14 <- ggplot(datos_dist, aes(x = valor)) +
-  geom_histogram(aes(y = after_stat(density)),
-                 fill = "#8B0000", color = "white",
-                 alpha = 0.7, bins = 30) +
-  geom_density(color = "#1A3C5E", linewidth = 1.1, linetype = "dashed") +
-  facet_wrap(~ tipo, scales = "free", ncol = 2) +
+# Gráfica izquierda — taquilla sin transformar
+g_antes <- ggplot(base_final, aes(x = taquilla_semanal)) +
+  geom_histogram(fill = "#8B0000", color = "white", bins = 40, alpha = 0.85) +
+  scale_x_continuous(labels = label_dollar(scale = 1e-6, suffix = "M")) +
   labs(
-    title   = "Gráfica 1.4 Distribución de ingresos de taquilla: original vs. ajuste logarítmico",
-    x       = "",
-    y       = "Densidad",
-    caption = "Fuente: Box Office Mojo"
+    title    = "Antes del logaritmo",
+    subtitle = "Taquilla semanal (USD)",
+    x        = "Ingresos semanales",
+    y        = "Frecuencia"
   ) +
   theme_minimal() +
   theme(
-    plot.title      = element_text(face = "bold", size = 11, hjust = 0),
-    axis.text       = element_text(size = 9),
-    strip.text      = element_text(size = 9, face = "bold"),
-    plot.caption    = element_text(size = 8, color = "gray50")
+    plot.title    = element_text(face = "bold", size = 11, hjust = 0.5),
+    plot.subtitle = element_text(size = 9, color = "gray50", hjust = 0.5),
+    axis.text     = element_text(size = 9)
   )
 
-ruta_g14 <- "C:/Users/natal/OneDrive/Personal/Universidad (1)/Noveno semestre/Analítica de datos/Caso Final/grafica_distribucion_taquilla.png"
-ggsave(ruta_g14, plot = grafica_14, width = 12, height = 6, dpi = 150)
+# Gráfica derecha — log taquilla
+g_despues <- ggplot(base_final, aes(x = log_taquilla)) +
+  geom_histogram(fill = "#1A3C5E", color = "white", bins = 40, alpha = 0.85) +
+  labs(
+    title    = "Después del logaritmo",
+    subtitle = "Log(Taquilla semanal)",
+    x        = "Log(Ingresos semanales)",
+    y        = "Frecuencia"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title    = element_text(face = "bold", size = 11, hjust = 0.5),
+    plot.subtitle = element_text(size = 9, color = "gray50", hjust = 0.5),
+    axis.text     = element_text(size = 9)
+  )
+grafica_log <- g_antes + g_despues +
+  plot_annotation(
+    title   = "Gráfica 1.4. Distribución de la taquilla antes y después de la transformación logarítmica",
+    caption = "Fuente: Box Office Mojo",
+    theme   = theme(
+      plot.title   = element_text(face = "bold", size = 11, hjust = 0.5),
+      plot.caption = element_text(size = 8, color = "gray50")
+    )
+  )
+ruta_g3 <- "C:/Users/natal/OneDrive/Personal/Universidad (1)/Noveno semestre/Analítica de datos/Caso Final/grafica_distribucion_log.png"
+ggsave(ruta_g3, plot = grafica_log, width = 12, height = 6, dpi = 150) 
