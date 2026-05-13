@@ -134,52 +134,41 @@ grafica_taquilla <- ggplot(base_final, aes(x = fecha, y = taquilla_semanal)) +
 ruta_g1 <- "C:/Users/natal/OneDrive/Personal/Universidad (1)/Noveno semestre/Analítica de datos/Caso Final/grafica_taquilla_semanal.png"
 ggsave(ruta_g1, plot = grafica_taquilla, width = 12, height = 6, dpi = 150)
 
-# GRÁFICA 1.3: INGRESOS DE NETFLIX VS TAQUILLA ESTADOUNIDENSE (2015–2022)
+# GRÁFICA 1.3: INGRESOS DE NETFLIX VS TAQUILLA ESTADOUNIDENSE (2015–2022) ANEXO
+base_final <- read_excel("C:/Users/natal/OneDrive/Personal/Universidad (1)/Noveno semestre/Analítica de datos/Caso Final/base streaming_taquilla USA.xlsx")
+escala <- max(base_final$taquilla_semanal) / max(base_final$ingresos_netflix)
 
-datos_largo <- base_final %>%
-  select(fecha, taquilla_semanal, ingresos_netflix) %>%
-  tidyr::pivot_longer(
-    cols      = c(taquilla_semanal, ingresos_netflix),
-    names_to  = "fuente",
-    values_to = "ingresos"
-  ) %>%
-  mutate(fuente = recode(fuente,
-    "taquilla_semanal" = "Taquilla EE.UU.",
-    "ingresos_netflix" = "Ingresos Netflix"
-  ))
-
-grafica_13 <- ggplot(datos_largo, aes(x = fecha, y = ingresos, color = fuente)) +
-  geom_line(linewidth = 0.7, alpha = 0.8) +
+grafica_netflix <- ggplot(base_final, aes(x = fecha)) +
+  geom_line(aes(y = taquilla_semanal, color = "Taquilla EE.UU."), linewidth = 0.7, alpha = 0.8) +
+  geom_line(aes(y = ingresos_netflix * escala, color = "Ingresos Netflix"), linewidth = 1.2) +
   geom_vline(xintercept = as.Date("2020-03-16"),
              color = "black", linewidth = 1, linetype = "dashed") +
-  annotate("text", x = as.Date("2020-05-01"), y = max(base_final$taquilla_semanal, na.rm = TRUE) * 0.92,
-           label = "Inicio COVID-19\n(mar 2020)",
-           hjust = 0, size = 3.5, color = "black") +
-  scale_color_manual(
-    values = c("Taquilla EE.UU." = "#8B0000", "Ingresos Netflix" = "#1A3C5E"),
-    name   = ""
+  annotate("text", x = as.Date("2020-05-01"), y = 450000000,
+           label = "Inicio COVID-19\n(mar 2020)", hjust = 0, size = 3.5) +
+  scale_y_continuous(
+    name   = "Taquilla semanal (millones USD)",
+    labels = label_dollar(scale = 1e-6, suffix = "M"),
+    sec.axis = sec_axis(~ . / escala,
+                        name   = "Ingresos Netflix (millones USD)",
+                        labels = label_dollar(suffix = "M"))
   ) +
-  scale_y_continuous(labels = label_dollar(scale = 1e-6, suffix = "M")) +
+  scale_color_manual(values = c("Taquilla EE.UU." = "#8B0000", "Ingresos Netflix" = "#1A3C5E")) +
   scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
   labs(
-    title   = "Gráfica 1.3 Ingresos de Netflix vs. taquilla estadounidense (2015–2022)",
+    title   = "Gráfica 2. Ingresos de Netflix vs. taquilla estadounidense (2015–2022)",
     x       = "",
-    y       = "Ingresos (millones USD)",
+    color   = "",
     caption = "Fuente: Box Office Mojo; Netflix Earnings Reports"
   ) +
   theme_minimal() +
   theme(
-    plot.title    = element_text(face = "bold", size = 11, hjust = 0),
-    plot.subtitle = element_text(size = 9, color = "gray50"),
-    axis.text     = element_text(size = 9),
-    plot.caption  = element_text(size = 8, color = "gray50"),
-    legend.position      = "bottom",
-    legend.text          = element_text(size = 9),
-    legend.key.width     = unit(1.2, "cm")
+    plot.title      = element_text(face = "bold", size = 11, hjust = 0),
+    axis.text       = element_text(size = 9),
+    legend.position = "bottom",
+    plot.caption    = element_text(size = 8, color = "gray50")
   )
-
-ruta_g13 <- "C:/Users/natal/OneDrive/Personal/Universidad (1)/Noveno semestre/Analítica de datos/Caso Final/grafica_netflix_vs_taquilla.png"
-ggsave(ruta_g13, plot = grafica_13, width = 12, height = 6, dpi = 150)
+ruta_g2 <- "C:/Users/natal/OneDrive/Personal/Universidad (1)/Noveno semestre/Analítica de datos/Caso Final/grafica_netflix_vs_taquilla.png"
+ggsave(ruta_g2, plot = grafica_netflix, width = 12, height = 6, dpi = 150)
 
 
 # GRÁFICA 1.4: DISTRIBUCIÓN DE INGRESOS DE TAQUILLA ANTES Y DESPUÉS
