@@ -133,3 +133,91 @@ grafica_taquilla <- ggplot(base_final, aes(x = fecha, y = taquilla_semanal)) +
 
 ruta_g1 <- "C:/Users/natal/OneDrive/Personal/Universidad (1)/Noveno semestre/Analítica de datos/Caso Final/grafica_taquilla_semanal.png"
 ggsave(ruta_g1, plot = grafica_taquilla, width = 12, height = 6, dpi = 150)
+
+# GRÁFICA 1.3: INGRESOS DE NETFLIX VS TAQUILLA ESTADOUNIDENSE (2015–2022)
+
+datos_largo <- base_final %>%
+  select(fecha, taquilla_semanal, ingresos_netflix) %>%
+  tidyr::pivot_longer(
+    cols      = c(taquilla_semanal, ingresos_netflix),
+    names_to  = "fuente",
+    values_to = "ingresos"
+  ) %>%
+  mutate(fuente = recode(fuente,
+    "taquilla_semanal" = "Taquilla EE.UU.",
+    "ingresos_netflix" = "Ingresos Netflix"
+  ))
+
+grafica_13 <- ggplot(datos_largo, aes(x = fecha, y = ingresos, color = fuente)) +
+  geom_line(linewidth = 0.7, alpha = 0.8) +
+  geom_vline(xintercept = as.Date("2020-03-16"),
+             color = "black", linewidth = 1, linetype = "dashed") +
+  annotate("text", x = as.Date("2020-05-01"), y = max(base_final$taquilla_semanal, na.rm = TRUE) * 0.92,
+           label = "Inicio COVID-19\n(mar 2020)",
+           hjust = 0, size = 3.5, color = "black") +
+  scale_color_manual(
+    values = c("Taquilla EE.UU." = "#8B0000", "Ingresos Netflix" = "#1A3C5E"),
+    name   = ""
+  ) +
+  scale_y_continuous(labels = label_dollar(scale = 1e-6, suffix = "M")) +
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  labs(
+    title   = "Gráfica 1.3 Ingresos de Netflix vs. taquilla estadounidense (2015–2022)",
+    x       = "",
+    y       = "Ingresos (millones USD)",
+    caption = "Fuente: Box Office Mojo; Netflix Earnings Reports"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title    = element_text(face = "bold", size = 11, hjust = 0),
+    plot.subtitle = element_text(size = 9, color = "gray50"),
+    axis.text     = element_text(size = 9),
+    plot.caption  = element_text(size = 8, color = "gray50"),
+    legend.position      = "bottom",
+    legend.text          = element_text(size = 9),
+    legend.key.width     = unit(1.2, "cm")
+  )
+
+ruta_g13 <- "C:/Users/natal/OneDrive/Personal/Universidad (1)/Noveno semestre/Analítica de datos/Caso Final/grafica_netflix_vs_taquilla.png"
+ggsave(ruta_g13, plot = grafica_13, width = 12, height = 6, dpi = 150)
+
+
+# GRÁFICA 1.4: DISTRIBUCIÓN DE INGRESOS DE TAQUILLA ANTES Y DESPUÉS
+#              DEL AJUSTE LOGARÍTMICO
+
+
+
+datos_dist <- base_final %>%
+  select(taquilla_semanal, log_taquilla) %>%
+  tidyr::pivot_longer(
+    cols      = everything(),
+    names_to  = "tipo",
+    values_to = "valor"
+  ) %>%
+  mutate(tipo = recode(tipo,
+    "taquilla_semanal" = "Distribución original\n(taquilla semanal en USD)",
+    "log_taquilla"     = "Distribución logarítmica\n(log de taquilla semanal)"
+  ))
+
+grafica_14 <- ggplot(datos_dist, aes(x = valor)) +
+  geom_histogram(aes(y = after_stat(density)),
+                 fill = "#8B0000", color = "white",
+                 alpha = 0.7, bins = 30) +
+  geom_density(color = "#1A3C5E", linewidth = 1.1, linetype = "dashed") +
+  facet_wrap(~ tipo, scales = "free", ncol = 2) +
+  labs(
+    title   = "Gráfica 1.4 Distribución de ingresos de taquilla: original vs. ajuste logarítmico",
+    x       = "",
+    y       = "Densidad",
+    caption = "Fuente: Box Office Mojo"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title      = element_text(face = "bold", size = 11, hjust = 0),
+    axis.text       = element_text(size = 9),
+    strip.text      = element_text(size = 9, face = "bold"),
+    plot.caption    = element_text(size = 8, color = "gray50")
+  )
+
+ruta_g14 <- "C:/Users/natal/OneDrive/Personal/Universidad (1)/Noveno semestre/Analítica de datos/Caso Final/grafica_distribucion_taquilla.png"
+ggsave(ruta_g14, plot = grafica_14, width = 12, height = 6, dpi = 150)
